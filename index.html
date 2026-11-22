@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WASTELAND · 文字游戏社区</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --black: #000000;
+    --white: #FFFFFF;
+    --gray-1: #F5F5F5;
+    --gray-2: #E5E5E5;
+    --gray-3: #999999;
+    --gray-4: #666666;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--white);
+    color: var(--black);
+    font-size: 14px;
+    line-height: 1.5;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #app { height: 100%; }
+
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: inherit;
+  }
+
+  input, textarea { font-family: inherit; outline: none; }
+
+  svg { display: block; }
+
+  /* ============ AUTH SCREEN ============ */
+  .auth-screen {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--white);
+    padding: 20px;
+  }
+
+  .auth-card {
+    width: 380px;
+    border: 1px solid var(--black);
+    padding: 48px 40px;
+    background: var(--white);
+  }
+
+  .auth-brand {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  .auth-title {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 8px;
+    margin-bottom: 6px;
+  }
+
+  .auth-subtitle {
+    color: var(--gray-4);
+    font-size: 11px;
+    letter-spacing: 4px;
+  }
+
+  .auth-tabs {
+    display: flex;
+    border: 1px solid var(--black);
+    margin-bottom: 28px;
+  }
+
+  .auth-tab {
+    flex: 1;
+    padding: 11px 0;
+    font-size: 12px;
+    letter-spacing: 4px;
+    text-align: center;
+    background: var(--white);
+    color: var(--black);
+    transition: all 0.15s;
+  }
+
+  .auth-tab + .auth-tab { border-left: 1px solid var(--black); }
+  .auth-tab.active { background: var(--black); color: var(--white); }
+
+  .auth-field { margin-bottom: 20px; }
+
+  .auth-field label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--gray-4);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .auth-field input {
+    width: 100%;
+    padding: 8px 0;
+    border: none;
+    border-bottom: 1px solid var(--black);
+    font-size: 14px;
+    background: transparent;
+    color: var(--black);
+  }
+
+  .auth-field input:focus { border-bottom: 2px solid var(--black); padding-bottom: 7px; }
+
+  .auth-button {
+    width: 100%;
+    padding: 13px;
+    background: var(--black);
+    color: var(--white);
+    border: 1px solid var(--black);
+    font-size: 12px;
+    letter-spacing: 4px;
+    margin-top: 12px;
+    transition: all 0.15s;
+  }
+
+  .auth-button:hover {
+    background: var(--white);
+    color: var(--black);
+  }
+
+  .auth-error {
+    color: var(--black);
+    font-size: 12px;
+    margin-top: 14px;
+    min-height: 0;
+    line-height: 1.5;
+  }
+
+  .auth-error:not(:empty) {
+    border-left: 2px solid var(--black);
+    padding-left: 10px;
+    min-height: 18px;
+  }
+
+  /* ============ MAIN APP ============ */
+  .app {
+    display: flex;
+    height: 100%;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 280px;
+    border-right: 1px solid var(--black);
+    display: flex;
+    flex-direction: column;
+    background: var(--white);
+    flex-shrink: 0;
+  }
+
+  .sidebar-header {
+    padding: 22px 20px;
+    border-bottom: 1px solid var(--black);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sidebar-logo {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 4px;
+  }
+
+  .sidebar-badge {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--gray-4);
+    border: 1px solid var(--gray-2);
+    padding: 2px 6px;
+  }
+
+  .sidebar-section-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--gray-4);
+    padding: 18px 20px 10px;
+    text-transform: uppercase;
+  }
+
+  .room-list {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .room-item {
+    padding: 14px 20px;
+    border-left: 3px solid transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    transition: background 0.1s;
+  }
+
+  .room-item:hover { background: var(--gray-1); }
+  .room-item.active {
+    background: var(--black);
+    color: var(--white);
+    border-left-color: var(--white);
+  }
+
+  .room-item svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+
+  .room-item-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sidebar-footer {
+    border-top: 1px solid var(--black);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .sidebar-footer:hover { background: var(--gray-1); }
+
+  .avatar {
+    border: 1px solid var(--black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--white);
+    position: relative;
+  }
+
+  .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .avatar svg {
+    width: 60%;
+    height: 60%;
+    stroke: var(--black);
+  }
+
+  .avatar.size-sm { width: 32px; height: 32px; }
+  .avatar.size-md { width: 40px; height: 40px; }
+  .avatar.size-lg { width: 120px; height: 120px; }
+
+  .sidebar-footer .user-name {
+    flex: 1;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sidebar-footer .user-arrow {
+    color: var(--gray-3);
+  }
+  .sidebar-footer .user-arrow svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* Main content */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--white);
+    min-width: 0;
+  }
+
+  /* Empty state */
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .empty-state-glyph {
+    font-size: 96px;
+    font-weight: 200;
+    letter-spacing: 0;
+    color: var(--gray-4);
+    line-height: 1;
+  }
+
+  .empty-state-text {
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--gray-3);
+    text-transform: uppercase;
+  }
+
+  /* Chat header */
+  .chat-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--black);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .chat-header-title {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .chat-header-title svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .chat-header-sub {
+    font-size: 11px;
+    color: var(--gray-4);
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+
+  .chat-header-meta {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--gray-4);
+    text-transform: uppercase;
+  }
+
+  /* Messages */
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+
+  .message {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    max-width: 72%;
+  }
+
+  .message.self {
+    flex-direction: row-reverse;
+    margin-left: auto;
+  }
+
+  .message-avatar {
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .message-content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .message.self .message-content { align-items: flex-end; }
+
+  .message-meta {
+    font-size: 11px;
+    color: var(--gray-4);
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+  }
+
+  .message-name {
+    font-weight: 600;
+    color: var(--black);
+    font-size: 12px;
+  }
+
+  .message-bubble {
+    padding: 10px 14px;
+    border: 1px solid var(--black);
+    font-size: 14px;
+    word-break: break-word;
+    background: var(--white);
+    cursor: pointer;
+    transition: opacity 0.1s;
+    line-height: 1.5;
+  }
+
+  .message-bubble:hover { opacity: 0.7; }
+
+  .message.self .message-bubble {
+    background: var(--black);
+    color: var(--white);
+  }
+
+  .message-image {
+    max-width: 240px;
+    max-height: 280px;
+    border: 1px solid var(--black);
+    display: block;
+    cursor: pointer;
+    object-fit: contain;
+  }
+
+  .message-reply-quote {
+    font-size: 11px;
+    padding: 6px 10px;
+    border-left: 2px solid var(--black);
+    background: var(--gray-1);
+    color: var(--gray-4);
+    cursor: pointer;
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .message-reply-quote strong {
+    color: var(--black);
+    font-weight: 600;
+    margin-right: 4px;
+  }
+
+  .message.highlighted {
+    animation: highlight 1.5s ease-out;
+  }
+
+  @keyframes highlight {
+    0% { background: var(--gray-1); }
+    100% { background: transparent; }
+  }
+
+  .messages-empty {
+    text-align: center;
+    color: var(--gray-3);
+    padding: 60px 20px;
+    font-size: 12px;
+    letter-spacing: 2px;
+  }
+
+  /* Input area */
+  .input-area {
+    border-top: 1px solid var(--black);
+    padding: 14px 24px 18px;
+    flex-shrink: 0;
+    background: var(--white);
+  }
+
+  .reply-preview {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border: 1px solid var(--black);
+    border-bottom: none;
+    background: var(--gray-1);
+    font-size: 12px;
+    margin-bottom: -1px;
+  }
+
+  .reply-preview-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .reply-preview-text strong { margin-right: 4px; }
+
+  .reply-preview-cancel {
+    padding: 4px;
+    display: flex;
+    align-items: center;
+  }
+  .reply-preview-cancel svg { width: 14px; height: 14px; }
+  .reply-preview-cancel:hover { color: var(--gray-4); }
+
+  .input-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    border: 1px solid var(--black);
+    padding: 8px;
+  }
+
+  .input-row.has-reply { border-top: 1px solid var(--black); }
+
+  .input-textarea {
+    flex: 1;
+    border: none;
+    resize: none;
+    font-size: 14px;
+    background: transparent;
+    color: var(--black);
+    max-height: 120px;
+    min-height: 24px;
+    padding: 4px 6px;
+    line-height: 1.5;
+  }
+
+  .icon-button {
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: var(--white);
+    color: var(--black);
+    transition: all 0.1s;
+  }
+
+  .icon-button:hover {
+    background: var(--black);
+    color: var(--white);
+  }
+
+  .icon-button svg { width: 16px; height: 16px; }
+
+  .icon-button.send-button {
+    background: var(--black);
+    color: var(--white);
+  }
+  .icon-button.send-button:hover {
+    background: var(--white);
+    color: var(--black);
+  }
+  .icon-button.send-button:disabled {
+    background: var(--gray-2);
+    color: var(--gray-3);
+    border-color: var(--gray-2);
+    cursor: not-allowed;
+  }
+
+  /* ============ PROFILE ============ */
+  .profile-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--white);
+  }
+
+  .profile-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--black);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+
+  .back-button {
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--white);
+    color: var(--black);
+    transition: all 0.1s;
+  }
+
+  .back-button:hover { background: var(--black); color: var(--white); }
+  .back-button svg { width: 16px; height: 16px; }
+
+  .profile-title {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  .profile-content {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+  }
+
+  .profile-avatar-large {
+    width: 120px;
+    height: 120px;
+    cursor: default;
+    position: relative;
+    margin-bottom: 24px;
+  }
+
+  .profile-avatar-large.editable { cursor: pointer; }
+
+  .profile-avatar-large.editable:hover .avatar-overlay {
+    opacity: 1;
+  }
+
+  .avatar-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    opacity: 0;
+    transition: opacity 0.15s;
+    pointer-events: none;
+  }
+
+  .avatar-overlay svg { width: 28px; height: 28px; stroke: var(--white); }
+
+  .profile-username {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+  }
+
+  .profile-join-date {
+    font-size: 11px;
+    color: var(--gray-4);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+
+  .profile-detail {
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid var(--black);
+  }
+
+  .profile-detail-row {
+    display: flex;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--gray-2);
+    font-size: 13px;
+    align-items: center;
+    min-height: 48px;
+  }
+
+  .profile-detail-row:last-child { border-bottom: none; }
+
+  .profile-detail-label {
+    width: 110px;
+    color: var(--gray-4);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .profile-detail-value {
+    flex: 1;
+    word-break: break-all;
+  }
+
+  .profile-actions {
+    margin-top: 28px;
+    display: flex;
+    gap: 12px;
+  }
+
+  .profile-action-button {
+    padding: 11px 22px;
+    border: 1px solid var(--black);
+    font-size: 11px;
+    letter-spacing: 2px;
+    background: var(--white);
+    color: var(--black);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.1s;
+  }
+
+  .profile-action-button:hover {
+    background: var(--black);
+    color: var(--white);
+  }
+
+  .profile-action-button svg { width: 14px; height: 14px; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: var(--black);
+    color: var(--white);
+    padding: 12px 22px;
+    font-size: 12px;
+    letter-spacing: 2px;
+    z-index: 1000;
+    opacity: 0;
+    transition: all 0.25s;
+    pointer-events: none;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--white); }
+  ::-webkit-scrollbar-thumb { background: var(--gray-2); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--black); }
+
+  .hidden { display: none !important; }
+
+  /* Image viewer */
+  .image-viewer {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    padding: 40px;
+  }
+
+  .image-viewer img {
+    max-width: 100%;
+    max-height: 100%;
+    border: 1px solid var(--white);
+    object-fit: contain;
+  }
+
+  .image-viewer-close {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--white);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+  }
+  .image-viewer-close:hover { background: var(--white); color: var(--black); }
+  .image-viewer-close svg { width: 18px; height: 18px; }
+
+  @media (max-width: 720px) {
+    .sidebar { width: 220px; }
+    .message { max-width: 85%; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+<div id="toast" class="toast"></div>
+
+<script>
+// ============ SVG ICONS (Feather-style, no emojis) ============
+const ICONS = {
+  send:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',
+  image:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="0" ry="0"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+  reply:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>',
+  back:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>',
+  close:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  user:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  hash:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>',
+  camera:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+  logout:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+  chevron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>'
+};
+
+// ============ STORAGE ============
+const STORAGE = {
+  USERS: 'wasteland_users_v1',
+  SESSION: 'wasteland_session_v1',
+  MESSAGES: 'wasteland_messages_v1'
+};
+
+function getUsers() {
+  try { return JSON.parse(localStorage.getItem(STORAGE.USERS) || '[]'); }
+  catch(e) { return []; }
+}
+function saveUsers(users) { localStorage.setItem(STORAGE.USERS, JSON.stringify(users)); }
+function getUser(username) { return getUsers().find(u => u.username === username); }
+function updateUser(username, updates) {
+  const users = getUsers();
+  const idx = users.findIndex(u => u.username === username);
+  if (idx >= 0) {
+    users[idx] = { ...users[idx], ...updates };
+    saveUsers(users);
+    return users[idx];
+  }
+  return null;
+}
+function getSession() { return localStorage.getItem(STORAGE.SESSION); }
+function setSession(username) { localStorage.setItem(STORAGE.SESSION, username); }
+function clearSession() { localStorage.removeItem(STORAGE.SESSION); }
+function getMessages() {
+  try { return JSON.parse(localStorage.getItem(STORAGE.MESSAGES) || '[]'); }
+  catch(e) { return []; }
+}
+function saveMessages(messages) { localStorage.setItem(STORAGE.MESSAGES, JSON.stringify(messages)); }
+
+// ============ STATE ============
+const ROOM = { id: 'wasteland', name: 'wasteland文字游戏社区', sub: '文字冒险者的聚集地' };
+let currentRoom = null;
+let replyTo = null;
+let profileViewingUser = null;
+let isOwnProfile = false;
+
+// ============ HELPERS ============
+function $(id) { return document.getElementById(id); }
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function formatTime(iso) {
+  const d = new Date(iso);
+  return d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+function formatDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+function formatDateTime(iso) {
+  const d = new Date(iso);
+  return d.toLocaleString('zh-CN', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12: false });
+}
+function showToast(text) {
+  const toast = $('toast');
+  toast.textContent = text;
+  toast.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => toast.classList.remove('show'), 2000);
+}
+function genId() {
+  return 'm_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+}
+function avatarHtml(user, sizeClass) {
+  if (user && user.avatar) {
+    return `<img src="${user.avatar}" alt="">`;
+  }
+  return ICONS.user;
+}
+
+// ============ AUTH SCREEN ============
+function renderAuth() {
+  $('app').innerHTML = `
+    <div class="auth-screen">
+      <div class="auth-card">
+        <div class="auth-brand">
+          <div class="auth-title">WASTELAND</div>
+          <div class="auth-subtitle">文字游戏社区</div>
+        </div>
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">登入</button>
+          <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">注册</button>
+        </div>
+        <div id="auth-form"></div>
+      </div>
+    </div>
+  `;
+  renderLoginForm();
+}
+
+function switchAuthTab(tab) {
+  $('tab-login').classList.toggle('active', tab === 'login');
+  $('tab-register').classList.toggle('active', tab === 'register');
+  if (tab === 'login') renderLoginForm();
+  else renderRegisterForm();
+}
+
+function renderLoginForm() {
+  $('auth-form').innerHTML = `
+    <div class="auth-field">
+      <label>用户名</label>
+      <input type="text" id="login-username" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="auth-field">
+      <label>密码</label>
+      <input type="password" id="login-password">
+    </div>
+    <div class="auth-error" id="login-error"></div>
+    <button class="auth-button" onclick="handleLogin()">登 入</button>
+  `;
+  const userInput = $('login-username');
+  const passInput = $('login-password');
+  userInput.focus();
+  userInput.addEventListener('keypress', e => {
+    if (e.key === 'Enter') passInput.focus();
+  });
+  passInput.addEventListener('keypress', e => {
+    if (e.key === 'Enter') handleLogin();
+  });
+}
+
+function renderRegisterForm() {
+  $('auth-form').innerHTML = `
+    <div class="auth-field">
+      <label>用户名</label>
+      <input type="text" id="reg-username" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="auth-field">
+      <label>邮箱</label>
+      <input type="email" id="reg-email" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="auth-field">
+      <label>密码</label>
+      <input type="password" id="reg-password">
+    </div>
+    <div class="auth-error" id="reg-error"></div>
+    <button class="auth-button" onclick="handleRegister()">注 册</button>
+  `;
+  const inputs = ['reg-username', 'reg-email', 'reg-password'];
+  inputs.forEach((id, i) => {
+    const el = $(id);
+    el.addEventListener('keypress', e => {
+      if (e.key === 'Enter') {
+        if (i < inputs.length - 1) $(inputs[i+1]).focus();
+        else handleRegister();
+      }
+    });
+  });
+  $('reg-username').focus();
+}
+
+function handleLogin() {
+  const username = $('login-username').value.trim();
+  const password = $('login-password').value;
+  const errorEl = $('login-error');
+  errorEl.textContent = '';
+
+  if (!username || !password) { errorEl.textContent = '请输入用户名和密码'; return; }
+  const user = getUser(username);
+  if (!user || user.password !== password) {
+    errorEl.textContent = '用户名或密码错误';
+    return;
+  }
+  setSession(username);
+  renderApp();
+}
+
+function handleRegister() {
+  const username = $('reg-username').value.trim();
+  const email = $('reg-email').value.trim();
+  const password = $('reg-password').value;
+  const errorEl = $('reg-error');
+  errorEl.textContent = '';
+
+  if (!username || !email || !password) { errorEl.textContent = '请填写所有字段'; return; }
+  if (username.length < 2) { errorEl.textContent = '用户名至少 2 个字符'; return; }
+  if (username.length > 20) { errorEl.textContent = '用户名最多 20 个字符'; return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errorEl.textContent = '邮箱格式不正确'; return; }
+  if (password.length < 4) { errorEl.textContent = '密码至少 4 个字符'; return; }
+  if (getUser(username)) { errorEl.textContent = '该用户名已被注册'; return; }
+
+  const users = getUsers();
+  users.push({
+    username, email, password,
+    avatar: null,
+    joinDate: new Date().toISOString()
+  });
+  saveUsers(users);
+  setSession(username);
+  showToast('注册成功');
+  renderApp();
+}
+
+// ============ MAIN APP ============
+function renderApp() {
+  const user = getUser(getSession());
+  if (!user) {
+    clearSession();
+    renderAuth();
+    return;
+  }
+
+  currentRoom = null;
+  replyTo = null;
+  profileViewingUser = null;
+  isOwnProfile = false;
+
+  $('app').innerHTML = `
+    <div class="app">
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-logo">WASTELAND</div>
+          <div class="sidebar-badge">DEMO</div>
+        </div>
+        <div class="sidebar-section-label">聊天室</div>
+        <div class="room-list" id="room-list"></div>
+        <div class="sidebar-footer" onclick="showOwnProfile()">
+          <div class="avatar size-sm" id="sidebar-avatar">${avatarHtml(user)}</div>
+          <div class="user-name">${escapeHtml(user.username)}</div>
+          <div class="user-arrow">${ICONS.chevron}</div>
+        </div>
+      </div>
+      <div class="main" id="main-content">
+        <div class="empty-state">
+          <div class="empty-state-glyph">無</div>
+          <div class="empty-state-text">SELECT A ROOM</div>
+        </div>
+      </div>
+    </div>
+  `;
+  renderRoomList();
+}
+
+function renderRoomList() {
+  $('room-list').innerHTML = `
+    <div class="room-item ${currentRoom === ROOM.id ? 'active' : ''}" onclick="enterRoom('${ROOM.id}')">
+      ${ICONS.hash}
+      <div class="room-item-name">${ROOM.name}</div>
+    </div>
+  `;
+}
+
+function enterRoom(roomId) {
+  if (roomId !== ROOM.id) return;
+  currentRoom = roomId;
+  replyTo = null;
+  profileViewingUser = null;
+  renderRoomList();
+  renderChat();
+}
+
+function renderChat() {
+  const main = $('main-content');
+  const messages = getMessages();
+
+  main.innerHTML = `
+    <div class="chat-header">
+      <div>
+        <div class="chat-header-title">${ICONS.hash} ${escapeHtml(ROOM.name)}</div>
+        <div class="chat-header-sub">${escapeHtml(ROOM.sub)}</div>
+      </div>
+      <div class="chat-header-meta">${messages.length} 条消息</div>
+    </div>
+    <div class="messages" id="messages"></div>
+    <div class="input-area" id="input-area"></div>
+  `;
+
+  renderMessages();
+  renderInputArea();
+
+  const messagesEl = $('messages');
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function renderMessages() {
+  const container = $('messages');
+  const messages = getMessages();
+  const currentUser = getUser(getSession());
+
+  if (messages.length === 0) {
+    container.innerHTML = `<div class="messages-empty">— 还没有消息，发一条吧 —</div>`;
+    return;
+  }
+
+  container.innerHTML = messages.map(msg => {
+    const isSelf = msg.username === currentUser.username;
+    const user = getUser(msg.username) || { username: msg.username };
+    const replyMsg = msg.replyTo ? messages.find(m => m.id === msg.replyTo) : null;
+
+    return `
+      <div class="message ${isSelf ? 'self' : ''}" data-msg-id="${msg.id}">
+        <div class="avatar size-md message-avatar" onclick="showUserProfile('${escapeHtml(msg.username)}')">${avatarHtml(user)}</div>
+        <div class="message-content">
+          <div class="message-meta">
+            <span class="message-name">${escapeHtml(msg.username)}${isSelf ? ' (你)' : ''}</span>
+            <span>${formatTime(msg.timestamp)}</span>
+          </div>
+          ${replyMsg ? `
+            <div class="message-reply-quote" onclick="scrollToMessage('${replyMsg.id}')">
+              <strong>${escapeHtml(replyMsg.username)}</strong>${escapeHtml(replyMsg.text || '[图片]')}
+            </div>
+          ` : ''}
+          ${msg.text ? `<div class="message-bubble" onclick="setReplyTo('${msg.id}')">${escapeHtml(msg.text)}</div>` : ''}
+          ${msg.image ? `<img class="message-image" src="${msg.image}" onclick="viewImage('${msg.id}')" alt="image">` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderInputArea() {
+  const area = $('input-area');
+  const messages = getMessages();
+
+  let replyHtml = '';
+  if (replyTo) {
+    const msg = messages.find(m => m.id === replyTo);
+    if (msg) {
+      replyHtml = `
+        <div class="reply-preview">
+          <div class="reply-preview-text">
+            <strong>回复 ${escapeHtml(msg.username)}:</strong>${escapeHtml(msg.text || '[图片]')}
+          </div>
+          <button class="reply-preview-cancel" onclick="cancelReply()" title="取消回复">${ICONS.close}</button>
+        </div>
+      `;
+    } else {
+      replyTo = null;
+    }
+  }
+
+  area.innerHTML = `
+    ${replyHtml}
+    <div class="input-row ${replyTo ? 'has-reply' : ''}">
+      <button class="icon-button" onclick="triggerImageUpload()" title="发送图片">
+        ${ICONS.image}
+      </button>
+      <input type="file" id="image-upload" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+      <textarea class="input-textarea" id="message-input" placeholder="输入消息，Enter 发送，Shift+Enter 换行" rows="1"></textarea>
+      <button class="icon-button send-button" onclick="sendMessage()" title="发送">
+        ${ICONS.send}
+      </button>
+    </div>
+  `;
+
+  const input = $('message-input');
+  input.focus();
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+  });
+  input.addEventListener('keypress', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+}
+
+function triggerImageUpload() {
+  $('image-upload').click();
+}
+
+function setReplyTo(msgId) {
+  replyTo = msgId;
+  renderInputArea();
+}
+
+function cancelReply() {
+  replyTo = null;
+  renderInputArea();
+}
+
+function scrollToMessage(msgId) {
+  const el = document.querySelector(`[data-msg-id="${msgId}"]`);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.remove('highlighted');
+    void el.offsetWidth;
+    el.classList.add('highlighted');
+  }
+}
+
+function sendMessage() {
+  const input = $('message-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const messages = getMessages();
+  messages.push({
+    id: genId(),
+    username: getSession(),
+    text,
+    image: null,
+    timestamp: new Date().toISOString(),
+    replyTo: replyTo
+  });
+  saveMessages(messages);
+
+  replyTo = null;
+  renderChat();
+}
+
+function handleImageUpload(event) {
+  const file = event.target.files[0];
+  event.target.value = '';
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    showToast('请选择图片文件');
+    return;
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    showToast('图片大小不能超过 2MB');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    const messages = getMessages();
+    messages.push({
+      id: genId(),
+      username: getSession(),
+      text: null,
+      image: e.target.result,
+      timestamp: new Date().toISOString(),
+      replyTo: replyTo
+    });
+    saveMessages(messages);
+    replyTo = null;
+    renderChat();
+  };
+  reader.readAsDataURL(file);
+}
+
+function viewImage(msgId) {
+  const messages = getMessages();
+  const msg = messages.find(m => m.id === msgId);
+  if (!msg || !msg.image) return;
+
+  const viewer = document.createElement('div');
+  viewer.className = 'image-viewer';
+  viewer.innerHTML = `
+    <img src="${msg.image}" alt="">
+    <button class="image-viewer-close" onclick="this.parentElement.remove()">${ICONS.close}</button>
+  `;
+  viewer.addEventListener('click', e => {
+    if (e.target === viewer) viewer.remove();
+  });
+  document.body.appendChild(viewer);
+}
+
+// ============ PROFILE ============
+function showOwnProfile() {
+  profileViewingUser = getSession();
+  isOwnProfile = true;
+  renderProfile();
+}
+
+function showUserProfile(username) {
+  if (username === getSession()) {
+    showOwnProfile();
+    return;
+  }
+  profileViewingUser = username;
+  isOwnProfile = false;
+  renderProfile();
+}
+
+function renderProfile() {
+  const user = getUser(profileViewingUser);
+  if (!user) {
+    showToast('用户不存在');
+    return;
+  }
+
+  const main = $('main-content');
+  main.innerHTML = `
+    <div class="profile-screen">
+      <div class="profile-header">
+        <button class="back-button" onclick="backFromProfile()" title="返回">${ICONS.back}</button>
+        <div class="profile-title">${isOwnProfile ? '个人主页' : escapeHtml(user.username) + ' 的主页'}</div>
+      </div>
+      <div class="profile-content">
+        <div class="avatar size-lg profile-avatar-large ${isOwnProfile ? 'editable' : ''}"
+             ${isOwnProfile ? `onclick="triggerAvatarUpload()"` : ''}>
+          ${user.avatar ? `<img src="${user.avatar}" alt="">` : ICONS.user}
+          ${isOwnProfile ? `<div class="avatar-overlay">${ICONS.camera}</div>` : ''}
+        </div>
+        <div class="profile-username">${escapeHtml(user.username)}</div>
+        <div class="profile-join-date">JOINED · ${formatDate(user.joinDate)}</div>
+
+        <div class="profile-detail">
+          <div class="profile-detail-row">
+            <div class="profile-detail-label">用户名</div>
+            <div class="profile-detail-value">${escapeHtml(user.username)}</div>
+          </div>
+          ${isOwnProfile ? `
+            <div class="profile-detail-row">
+              <div class="profile-detail-label">邮箱</div>
+              <div class="profile-detail-value">${escapeHtml(user.email)}</div>
+            </div>
+          ` : ''}
+          <div class="profile-detail-row">
+            <div class="profile-detail-label">加入时间</div>
+            <div class="profile-detail-value">${formatDateTime(user.joinDate)}</div>
+          </div>
+          <div class="profile-detail-row">
+            <div class="profile-detail-label">头像</div>
+            <div class="profile-detail-value">${user.avatar ? '已设置自定义头像' : '默认头像'}</div>
+          </div>
+        </div>
+
+        ${isOwnProfile ? `
+          <div class="profile-actions">
+            <button class="profile-action-button" onclick="triggerAvatarUpload()">${ICONS.camera} 更换头像</button>
+            <button class="profile-action-button" onclick="handleLogout()">${ICONS.logout} 退出登入</button>
+          </div>
+          <input type="file" id="avatar-upload" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
+        ` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function triggerAvatarUpload() {
+  $('avatar-upload').click();
+}
+
+function backFromProfile() {
+  profileViewingUser = null;
+  isOwnProfile = false;
+  const main = $('main-content');
+  if (currentRoom) {
+    renderChat();
+  } else {
+    main.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-glyph">無</div>
+        <div class="empty-state-text">SELECT A ROOM</div>
+      </div>
+    `;
+  }
+}
+
+function handleAvatarUpload(event) {
+  const file = event.target.files[0];
+  event.target.value = '';
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    showToast('请选择图片文件');
+    return;
+  }
+  if (file.size > 1 * 1024 * 1024) {
+    showToast('头像大小不能超过 1MB');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    updateUser(getSession(), { avatar: e.target.result });
+    showToast('头像已更新');
+    const sidebarAvatar = $('sidebar-avatar');
+    if (sidebarAvatar) sidebarAvatar.innerHTML = `<img src="${e.target.result}" alt="">`;
+    renderProfile();
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleLogout() {
+  clearSession();
+  currentRoom = null;
+  replyTo = null;
+  profileViewingUser = null;
+  renderAuth();
+}
+
+// ============ GLOBAL EVENTS ============
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (replyTo) cancelReply();
+    const viewer = document.querySelector('.image-viewer');
+    if (viewer) viewer.remove();
+  }
+});
+
+// ============ INIT ============
+function init() {
+  const session = getSession();
+  if (session) {
+    const user = getUser(session);
+    if (user) {
+      renderApp();
+      return;
+    }
+    clearSession();
+  }
+  renderAuth();
+}
+
+init();
+</script>
+
+</body>
+</html>
